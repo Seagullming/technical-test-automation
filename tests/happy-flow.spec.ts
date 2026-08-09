@@ -1,48 +1,156 @@
 import { test, expect } from '@playwright/test';
 
-import { HomePage } from '../pages/HomePage';
-import { CategoryPage } from '../pages/CategoryPage';
 import { ProductPage } from '../pages/ProductPage';
 import { BasketPage } from '../pages/BasketPage';
+import { LoginPage } from '../pages/LoginPage';
+import { GuestCheckoutPage } from '../pages/GuestCheckoutPage';
+import { ConfirmationPage } from '../pages/ConfirmationPage';
+import { SuccessfulConfirmationPage } from '../pages/SuccessfulConfirmationPage';
 import { navigateToProduct } from '../utils/productNavigation';
 
 test.describe('Guest checkout', () => {
 
-  test('shopper can browse a product through subcategory dropdownand open up product details', async ({ page }) => {
-
+  test('shopper can browse a product through subcategory and open product details', async ({ page }) => {
     const productPage = new ProductPage(page);
-    await navigateToProduct(page, 'Makeup', 'Cheeks', 'BeneFit Girl Meets Pearl');
-    await expect(productPage.productName).toHaveText('BeneFit Girl Meets Pearl');
-});
 
-test('shopper can add a product and update basket quantity', async ({ page }) => {
+    await navigateToProduct(
+      page,
+      'Makeup',
+      'BeneFit Girl Meets Pearl',
+      'Cheeks'
+    );
 
-  const basketPage = new BasketPage(page);
-  const productPage = new ProductPage(page);
-    await navigateToProduct(page, 'Skincare', 'Cheeks', 'BeneFit Girl Meets Pearl');
-    await expect(productPage.productName).toHaveText('BeneFit Girl Meets Pearl');
+    await expect(productPage.productName)
+      .toHaveText('BeneFit Girl Meets Pearl');
+  });
 
-  await productPage.setQuantity(1);
 
-  await productPage.addToCart();
+  test('shopper can browse a product directly through category and open product details', async ({ page }) => {
+    const productPage = new ProductPage(page);
 
-  // Verify if basket has been displayed and product added
-  await expect(basketPage.heading).toBeVisible();
+    await navigateToProduct(
+      page,
+      'Skincare',
+      'Total Moisture Facial Cream'
+    );
 
-  await expect(
-    basketPage.productName('BeneFit Girl Meets Pearl')
-  ).toBeVisible();
+    await expect(productPage.productName)
+      .toHaveText('Total Moisture Facial Cream');
+  });
 
-  await expect(
-    basketPage.quantityInput('BeneFit Girl Meets Pearl')
-  ).toHaveValue('1');
 
-  // Update basket quantity
-  await basketPage.updateQuantity('BeneFit Girl Meets Pearl', 2);
+  test('shopper can add a product and update basket quantity', async ({ page }) => {
+    const productPage = new ProductPage(page);
+    const basketPage = new BasketPage(page);
 
-  await expect(
-    basketPage.quantityInput('BeneFit Girl Meets Pearl')
-  ).toHaveValue('2');
-});
+    const product = 'BeneFit Girl Meets Pearl';
+
+    await navigateToProduct(
+      page,
+      'Makeup',
+      product,
+      'Cheeks'
+    );
+
+    await expect(productPage.productName)
+      .toHaveText(product);
+
+    await productPage.setQuantity(1);
+    await productPage.addToCart();
+
+    // Verify basket is displayed and product was added
+    await expect(basketPage.heading).toBeVisible();
+
+    await expect(
+      basketPage.productName(product)
+    ).toBeVisible();
+
+    await expect(
+      basketPage.quantityInput(product)
+    ).toHaveValue('1');
+
+    // Update basket quantity
+    await basketPage.updateQuantity(product, 2);
+
+    await expect(
+      basketPage.quantityInput(product)
+    ).toHaveValue('2');
+  });
+
+
+  test('shopper can complete guest checkout successfully', async ({ page }) => {
+    const productPage = new ProductPage(page);
+    const basketPage = new BasketPage(page);
+    const loginPage = new LoginPage(page);
+    const guestCheckoutPage = new GuestCheckoutPage(page);
+    const confirmationPage = new ConfirmationPage(page);
+    const successfulConfirmationPage =
+      new SuccessfulConfirmationPage(page);
+
+    const category = 'Makeup';
+    const subcategory = 'Cheeks';
+    const product = 'BeneFit Girl Meets Pearl';
+
+    // Browse to product
+    await navigateToProduct(
+      page,
+      category,
+      product,
+      subcategory
+    );
+
+    // Add product to basket
+    await productPage.setQuantity(1);
+    await productPage.addToCart();
+
+    await expect(
+      basketPage.productName(product)
+    ).toBeVisible();
+
+    // Proceed to checkout
+    await basketPage.proceedToCheckout();
+
+    // Continue as guest
+    await loginPage.continueAsGuest();
+
+    // Enter mandatory guest details
+    await guestCheckoutPage.enterGuestDetails({
+      firstName: 'Test',
+      lastName: 'Customer',
+      email: 'test.customer@example.com',
+      address: '123 Test Street',
+      city: 'Wellington',
+      region: 'Wellington',
+      postcode: '6011',
+      country: 'New Zealand',
+    });
+
+    await guestCheckoutPage.continueCheckout();
+
+    // Verify checkout confirmation
+    await expect(
+      confirmationPage.heading
+    ).toBeVisible();
+
+    await expect(
+      confirmationPage.productName(product)
+    ).toBeVisible();
+
+    await expect(
+      confirmationPage.productQuantity(product)
+    ).toHaveText('1');
+
+    // Confirm order
+    await confirmationPage.confirmOrder();
+
+    // Verify successful order
+    await expect(
+      successfulConfirmationPage.heading
+    ).toBeVisible();
+
+    await expect(
+      successfulConfirmationPage.successMessage
+    ).toBeVisible();
+  });
 
 });

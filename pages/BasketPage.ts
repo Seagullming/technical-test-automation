@@ -15,7 +15,7 @@ export class BasketPage {
     this.shoppingItemTable = page.locator('.shopping-cart-table');
     this.updateButton = page.getByRole('button', { name: 'Update' });
     this.removeButton = page.getByRole('button', { name: 'Remove' });
-    this.checkoutButton = page.getByRole('link', { name: 'Checkout' });
+    this.checkoutButton = page.locator('#cart_checkout1');
   }
   productRow(productName: string): Locator {
     return this.page
