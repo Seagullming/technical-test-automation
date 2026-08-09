@@ -4,51 +4,45 @@ import { HomePage } from '../pages/HomePage';
 import { CategoryPage } from '../pages/CategoryPage';
 import { ProductPage } from '../pages/ProductPage';
 import { BasketPage } from '../pages/BasketPage';
+import { navigateToProduct } from '../utils/productNavigation';
 
 test.describe('Guest checkout', () => {
 
-  test('shopper can add a product and update basket quantity', async ({ page }) => {
+  test('shopper can browse a product through subcategory dropdownand open up product details', async ({ page }) => {
 
-    const homePage = new HomePage(page);
-    const categoryPage = new CategoryPage(page);
     const productPage = new ProductPage(page);
-    const basketPage = new BasketPage(page);
+    await navigateToProduct(page, 'Makeup', 'Cheeks', 'BeneFit Girl Meets Pearl');
+    await expect(productPage.productName).toHaveText('BeneFit Girl Meets Pearl');
+});
 
-    const category = 'Makeup';
-    const subcategory = 'Cheeks';
-    const product = 'BeneFit Girl Meets Pearl';
+test('shopper can add a product and update basket quantity', async ({ page }) => {
 
-    await homePage.goto();
+  const basketPage = new BasketPage(page);
+  const productPage = new ProductPage(page);
+    await navigateToProduct(page, 'Skincare', 'Cheeks', 'BeneFit Girl Meets Pearl');
+    await expect(productPage.productName).toHaveText('BeneFit Girl Meets Pearl');
 
-    await homePage.openCategory(category);
+  await productPage.setQuantity(1);
 
-    await categoryPage.openSubcategory(subcategory);
+  await productPage.addToCart();
 
-    await categoryPage.openProduct(product);
+  // Verify if basket has been displayed and product added
+  await expect(basketPage.heading).toBeVisible();
 
-    await expect(productPage.productName).toHaveText(product);
+  await expect(
+    basketPage.productName('BeneFit Girl Meets Pearl')
+  ).toBeVisible();
 
-    await productPage.setQuantity(1);
+  await expect(
+    basketPage.quantityInput('BeneFit Girl Meets Pearl')
+  ).toHaveValue('1');
 
-    await productPage.addToCart();
+  // Update basket quantity
+  await basketPage.updateQuantity('BeneFit Girl Meets Pearl', 2);
 
-    // Verify if basket has been displayed and product added
-    await expect(basketPage.heading).toBeVisible();
-
-    await expect(
-      basketPage.productName(product)
-    ).toBeVisible();
-
-    await expect(
-      basketPage.quantityInput(product)
-    ).toHaveValue('1');
-
-    // Update basket quantity
-    await basketPage.updateQuantity(product, 2);
-
-    await expect(
-      basketPage.quantityInput(product)
-    ).toHaveValue('2');
-  });
+  await expect(
+    basketPage.quantityInput('BeneFit Girl Meets Pearl')
+  ).toHaveValue('2');
+});
 
 });
