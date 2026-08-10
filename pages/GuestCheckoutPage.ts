@@ -1,4 +1,5 @@
 import { Page, Locator } from '@playwright/test';
+import { GuestCheckoutData } from '../types/GuestCheckoutData';
 
 export class GuestCheckoutPage {
   readonly page: Page;
@@ -24,6 +25,7 @@ export class GuestCheckoutPage {
   readonly countryError: Locator;
 
   readonly continueButton: Locator;
+  
 
   constructor(page: Page) {
     this.page = page;
@@ -76,16 +78,8 @@ export class GuestCheckoutPage {
     });
   }
 
-  async enterGuestDetails(details: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    address: string;
-    city: string;
-    region: string;
-    postcode: string;
-    country: string;
-  }) {
+  async enterGuestDetails(details: GuestCheckoutData) {
+  
     await this.firstNameInput.fill(details.firstName);
     await this.lastNameInput.fill(details.lastName);
     await this.emailInput.fill(details.email);

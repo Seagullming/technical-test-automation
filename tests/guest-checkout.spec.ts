@@ -7,6 +7,9 @@ import { GuestCheckoutPage } from '../pages/GuestCheckoutPage';
 import { ConfirmationPage } from '../pages/ConfirmationPage';
 import { SuccessfulConfirmationPage } from '../pages/SuccessfulConfirmationPage';
 import { navigateToProduct } from '../utils/productNavigation';
+import { GuestCheckoutData } from '../types/GuestCheckoutData';
+import { readCsv } from '../utils/csvReader';
+
 
 test.describe('Guest checkout', () => {
 
@@ -40,44 +43,60 @@ test.describe('Guest checkout', () => {
 
 
   test('shopper can add a product and update basket quantity', async ({ page }) => {
-    const productPage = new ProductPage(page);
-    const basketPage = new BasketPage(page);
+  const productPage = new ProductPage(page);
+  const basketPage = new BasketPage(page);
 
-    const product = 'BeneFit Girl Meets Pearl';
+  const product = 'BeneFit Girl Meets Pearl';
 
-    await navigateToProduct(
-      page,
-      'Makeup',
-      product,
-      'Cheeks'
-    );
+  await navigateToProduct(
+    page,
+    'Makeup',
+    product,
+    'Cheeks'
+  );
 
-    await expect(productPage.productName)
-      .toHaveText(product);
+  await expect(productPage.productName).toHaveText(product);
 
-    await productPage.setQuantity(1);
-    await productPage.addToCart();
+  // Add 1 product to basket
+  await productPage.setQuantity(1);
+  await productPage.addToCart();
 
-    // Verify basket is displayed and product was added
-    await expect(basketPage.heading).toBeVisible();
+  // Verify basket and product
+  await expect(basketPage.heading).toBeVisible();
 
-    await expect(
-      basketPage.productName(product)
-    ).toBeVisible();
+  await expect(
+    basketPage.productName(product)
+  ).toBeVisible();
 
-    await expect(
-      basketPage.quantityInput(product)
-    ).toHaveValue('1');
+  await expect(
+    basketPage.quantityInput(product)
+  ).toHaveValue('1');
 
-    // Update basket quantity
-    await basketPage.updateQuantity(product, 2);
+  // Verify unit price and initial line total
+  await expect(
+    basketPage.unitPrice(product)
+  ).toHaveText('$19.00');
 
-    await expect(
-      basketPage.quantityInput(product)
-    ).toHaveValue('2');
-  });
+  await expect(
+    basketPage.lineTotal(product)
+  ).toHaveText('$19.00');
+
+  // Update quantity from 1 to 2
+  await basketPage.updateQuantity(product, 2);
+
+  // Verify updated quantity
+  await expect(
+    basketPage.quantityInput(product)
+  ).toHaveValue('2');
+
+  // Verify line total has recalculated
+  await expect(
+    basketPage.lineTotal(product)
+  ).toHaveText('$38.00');
+});
 
 
+ 
   test('shopper can complete guest checkout successfully', async ({ page }) => {
     const productPage = new ProductPage(page);
     const basketPage = new BasketPage(page);
@@ -91,6 +110,10 @@ test.describe('Guest checkout', () => {
     const subcategory = 'Cheeks';
     const product = 'BeneFit Girl Meets Pearl';
 
+    // Read guest checkout details from CSV
+    const guestData =
+      readCsv<GuestCheckoutData>('guest-checkout.csv')[0];
+
     // Browse to product
     await navigateToProduct(
       page,
@@ -103,6 +126,7 @@ test.describe('Guest checkout', () => {
     await productPage.setQuantity(1);
     await productPage.addToCart();
 
+    // Verify product added
     await expect(
       basketPage.productName(product)
     ).toBeVisible();
@@ -113,21 +137,14 @@ test.describe('Guest checkout', () => {
     // Continue as guest
     await loginPage.continueAsGuest();
 
-    // Enter mandatory guest details
-    await guestCheckoutPage.enterGuestDetails({
-      firstName: 'Test',
-      lastName: 'Customer',
-      email: 'test.customer@example.com',
-      address: '123 Test Street',
-      city: 'Wellington',
-      region: 'Wellington',
-      postcode: '6011',
-      country: 'New Zealand',
-    });
+    // Enter mandatory guest details from CSV
+    await guestCheckoutPage.enterGuestDetails(
+      guestData
+    );
 
     await guestCheckoutPage.continueCheckout();
 
-    // Verify checkout confirmation
+    // Verify checkout confirmation page
     await expect(
       confirmationPage.heading
     ).toBeVisible();

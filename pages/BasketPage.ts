@@ -8,19 +8,36 @@ export class BasketPage {
   readonly removeButton: Locator;
   readonly checkoutButton: Locator;
 
-
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.getByRole('heading', { name: 'Shopping Cart' });
-    this.shoppingItemTable = page.locator('.shopping-cart-table');
-    this.updateButton = page.getByRole('button', { name: 'Update' });
-    this.removeButton = page.getByRole('button', { name: 'Remove' });
-    this.checkoutButton = page.locator('#cart_checkout1');
+
+    this.heading = page.getByRole('heading', {
+      name: 'Shopping Cart',
+    });
+
+    this.shoppingItemTable = page.locator(
+      '#cart .product-list'
+    );
+
+    this.updateButton = page.getByRole('button', {
+      name: 'Update',
+    });
+
+    this.removeButton = page.locator(
+      '#cart .product-list a[href*="remove="]'
+    );
+
+    this.checkoutButton = page.locator(
+      '#cart_checkout1'
+    );
   }
+
   productRow(productName: string): Locator {
     return this.page
-      .locator('table.table tbody tr')
-      .filter({ hasText: productName });
+      .locator('#cart .product-list tbody tr')
+      .filter({
+        hasText: productName,
+      });
   }
 
   productName(productName: string): Locator {
@@ -48,15 +65,27 @@ export class BasketPage {
       .nth(5);
   }
 
-  async updateQuantity(productName: string, quantity: number) {
+  removeProductButton(productName: string): Locator {
+    return this.productRow(productName)
+      .locator('a[href*="remove="]');
+  }
+
+  async updateQuantity(
+    productName: string,
+    quantity: number
+  ) {
     await this.quantityInput(productName)
       .fill(quantity.toString());
 
     await this.updateButton.click();
   }
 
+  async removeProduct(productName: string) {
+    await this.removeProductButton(productName)
+      .click();
+  }
+
   async proceedToCheckout() {
     await this.checkoutButton.click();
   }
 }
-
