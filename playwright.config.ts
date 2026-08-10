@@ -29,6 +29,8 @@ export default defineConfig({
     baseURL: 'https://automationteststore.com/',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+     /* Take screenshot when test getting failed */
+    screenshot: 'only-on-failure'
   },
 
   /* Configure projects for major browsers */

@@ -153,4 +153,66 @@ test.describe('Guest checkout', () => {
     ).toBeVisible();
   });
 
+
+  test('guest checkout validates mandatory fields', async ({ page }) => {
+  const productPage = new ProductPage(page);
+  const basketPage = new BasketPage(page);
+  const loginPage = new LoginPage(page);
+  const guestCheckoutPage = new GuestCheckoutPage(page);
+
+  const product = 'BeneFit Girl Meets Pearl';
+
+  // Browse to product
+  await navigateToProduct(
+    page,
+    'Makeup',
+    product,
+    'Cheeks'
+  );
+
+  // Add product to basket
+  await productPage.setQuantity(1);
+  await productPage.addToCart();
+
+  // Proceed to checkout
+  await basketPage.proceedToCheckout();
+
+  // Continue as guest
+  await loginPage.continueAsGuest();
+
+  // Ensure country is not selected
+  await guestCheckoutPage.clearCountry();
+
+  // Submit form with mandatory fields blank
+  await guestCheckoutPage.continueCheckout();
+
+  // Verify mandatory field validation messages
+  await expect(
+    guestCheckoutPage.firstNameError
+  ).toBeVisible();
+
+  await expect(
+    guestCheckoutPage.lastNameError
+  ).toBeVisible();
+
+  await expect(
+    guestCheckoutPage.emailError
+  ).toBeVisible();
+
+  await expect(
+    guestCheckoutPage.addressError
+  ).toBeVisible();
+
+  await expect(
+    guestCheckoutPage.cityError
+  ).toBeVisible();
+
+  await expect(
+    guestCheckoutPage.postcodeError
+  ).toBeVisible();
+
+  await expect(
+    guestCheckoutPage.countryError
+  ).toBeVisible();
+});
 });
