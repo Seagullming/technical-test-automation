@@ -43,6 +43,14 @@
 **Then** validation messages should be displayed for the required fields  
 **And** the shopper should not be able to continue with the checkout
 
+### Scenario 5 - Validate invalid checkout information
+
+**Given** the shopper has selected guest checkout  
+**When** the shopper enters invalid information such as an invalid email address  
+**And** submits the checkout form  
+**Then** an appropriate validation message should be displayed  
+**And** the shopper should not be able to continue until the information is corrected
+
 # Task 2 - Additional Scenarios
 
 ### Additional Test Scenario 1 - Search behaviour and empty results
