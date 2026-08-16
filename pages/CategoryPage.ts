@@ -8,17 +8,21 @@ export class CategoryPage {
   }
 
   subcategoryLink(subcategoryName: string): Locator {
-    return this.page.getByRole('link', {
-      name: subcategoryName,
-      exact: true,
-    });
+    return this.page
+      .locator('#maincontainer')
+      .getByRole('link', {
+        name: subcategoryName,
+        exact: true,
+      });
   }
 
   productLink(productName: string): Locator {
-    return this.page.getByRole('link', {
-      name: productName,
-      exact: true,
-    });
+    return this.page
+      .locator('#maincontainer')
+      .getByRole('link', {
+        name: productName,
+        exact: true,
+      });
   }
 
   async openSubcategory(subcategoryName: string) {
